@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <title>Proyecto Alan</title>
+</head>
+<body>
+
+  <div id="radar">
+    <div id="rad"></div>
+    <div class="obj" data-x="120" data-y="75"></div>
+
+  </div>
+
+  <style media="screen">
+  #radar{
+    position:relative;
+    overflow:hidden;
+    width:321px; height:321px;
+    background:#222 url(http://i.stack.imgur.com/vY6Tl.png);
+    border-radius: 50%;
+  }
+  #rad{
+    position:absolute;
+    width:321px;
+    height:321px; background:url(http://i.stack.imgur.com/fbgUD.png);
+  }
+  .obj{
+    background:#cf5;
+    position:absolute;
+    border-radius: 50%;
+    width:4px; height:4px; margin:-2px;
+    box-shadow:0 0 10px 5px rgba(100,255,0,0.5);
+    opacity:0.2;
+  }
+  </style>
+
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+
+  <script type="text/javascript">
+  var sense = true;
+  $(function() {
+
+    var $rad = $('#rad'),
+    $obj = $('.obj'),
+    deg = -90,
+    rad = $rad.width() / 2;
+
+    $obj.each(function(){
+      var pos = $(this).data(),
+      getAtan = Math.atan2(pos.x-rad, pos.y-rad),
+      getDeg = (-getAtan/(Math.PI/180) + 180) | 0;
+      // Read/set positions and store degree
+      $(this).css({left:pos.x, top:pos.y}).attr('data-atDeg', getDeg);
+    });
+
+    (function rotate() {
+      $rad.css({transform: 'rotate('+ deg +'deg)'}); // Radar rotation
+      $('[data-atDeg='+deg+']').stop().fadeTo(0,1).fadeTo(1700,0.2); // Animate dot at deg
+
+      if (sense){
+        deg = ++ deg ;      // Increment and reset to 0 at 360
+        setTimeout(rotate, 25); // LOOP
+        if (deg>90){sense = false;}
+      }else{
+        deg = -- deg ;      // Increment and reset to 0 at 360
+        setTimeout(rotate, 25); // LOOP
+        if (deg < -90){sense = true;}
+      }
+
+
+
+    })();
+
+  });
+</script>
+
+
+
+<script type="text/javascript">
+
+document.addEventListener("keypress", function onEvent(event) {
+  if(event.key == 8){
+    client.publish("rGOuvhLWBp70ZNL/movement","straight")
+  }
+
+  if(event.key == 2){
+    client.publish("rGOuvhLWBp70ZNL/movement","back")
+  }
+  if(event.key == 4){
+    client.publish("rGOuvhLWBp70ZNL/movement","left")
+  }
+  if(event.key == 6){
+    client.publish("rGOuvhLWBp70ZNL/movement","right")
+  }
+});
+
+document.addEventListener("keyup", function onEvent(event) {
+  console.log("se libera" + event.key)
+  client.publish("rGOuvhLWBp70ZNL/movement","stop")
+});
+
+</script>
+
+
+<script type="text/javascript">
+
+
+
+const options = {
+  connectTimeout: 1000,
+  // Authentication
+  clientId: 'client_id_'+ Math.floor((Math.random() * 1000000) + 1),
+  username: 'ZG3OsgrkDapAFLU',
+  password: 'kYCcaNvxXHC6YH8',
+  keepalive: 60,
+  clean: true,
+}
+
+// WebSocket connect url
+const WebSocket_URL = 'wss://ioticos.org:8094/mqtt';
+const client = mqtt.connect(WebSocket_URL, options)
+//$("#display_status").append("🔵 Intentando conexión con nodo PROYECTO ALAN <br>");
+
+client.on('connect', () => {
+  console.log('Connect success');
+  //$("#display_status").append("✅ Conexión exitosa! <br>");
+  client.subscribe('rGOuvhLWBp70ZNL/#', { qos: 0 }, (error) => {
+    if(error){
+      //$("#display_status").append("🔴 Suscripción a tópico rGOuvhLWBp70ZNL/# exitosa!<br>");
+    }else{
+      //$("#display_status").append("✅ Suscripción a tópico rGOuvhLWBp70ZNL/# exitosa!<br>");
+    }
+
+  })
+})
+
+client.on('message', (topic, message) => {
+  console.log('Mensaje recibido bajo tópico: ', topic, ' -> ', message.toString());
+  //$("#display_output").append("Tópico ⇨ "+topic+" Mensaje ⇨ "+message.toString()+"<br>");
+})
+
+client.on('reconnect', (error) => {
+  console.log('reconnecting:', error);
+  //$("#display_status").append("🔵 Reconectando... :(<br>");
+})
+
+client.on('error', (error) => {
+  console.log('Connect Error:', error);
+  //$("#display_status").append("🔴 Error en la conexión :(<br>");
+})
+
+</script>
+
+</body>
+</html>
