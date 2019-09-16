@@ -4,8 +4,6 @@
 #include <PubSubClient.h>
 
 
-
-
 //************************
 //**** P I N E S *********
 //************************
@@ -35,11 +33,12 @@
 //**** C O N F I G *******
 //************************
 
-//MQTT
+//WIFI
 const char* ssid = "IOTICOS";
 const char* password =  "pingpong";
 
 
+//MQTT
 const char *mqtt_server = "ioticos.org";
 const int mqtt_port = 1883;
 const char *mqtt_user = "0AJDqCpuJnr3VwG";
@@ -47,11 +46,13 @@ const char *mqtt_pass = "hIDxo6MJeZeOVAC";
 const String root_topic = "wBdfeDSE8C1zFW6";
 
 //SERVO
-#define servo_max_ang   160
-#define servo_min_ang   10
-#define servo_speed     100
-#define servo_step     3
+#define servo_max_ang   180
+#define servo_min_ang   0
+#define servo_speed     20
+#define servo_step      3
 
+
+/*
 // Set your Static IP address
 IPAddress local_IP(192, 168, 100, 33);
 // Set your Gateway IP address
@@ -60,41 +61,33 @@ IPAddress gateway(192, 168, 100, 254);
 IPAddress subnet(255, 255, 255, 0);
 IPAddress primaryDNS(8, 8, 8, 8);   //optional
 IPAddress secondaryDNS(8, 8, 4, 4); //optional
-
-
-
+*/
 
 
 //************************
 //** V A R I A B L E S ***
 //************************
-TaskHandle_t Task2;
+
 
 Servo servo;                // se declara instancia de servo
 int pos = 0;                // guardaremos la posición actual del servo
-bool servo_active = true;   //determina si el servo gira o no
-
 int dist_map[(servo_max_ang-servo_min_ang)/servo_step];  //creamos array mapa para guardar una distancia por ángulo
 
 //MQTT
 WiFiClient espClient;
 PubSubClient client(espClient);
-long lastMsg = 0;
-char msg[25];
 
-int distance_avg = 0;
-
+//MENSAJERIA
+String tosend = "";
+char buf[20];
 
 
 
 //************************
 //** F U N C I O N E S ***
 //************************
-void create_task2();
+
 int distance();
-void print_array(int myArray[]);
-
-
 void setup_wifi();
 void callback(char* topic, byte* payload, unsigned int length);
 void reconnect();
@@ -131,19 +124,18 @@ void setup() {
   digitalWrite(pin_ena2,HIGH);
 
   digitalWrite(pin_echo,LOW);
-  create_task2();
+
   servo.attach(pin_servo);  // attaches the servo on pin 13 to the servo object
 
   randomSeed(micros());
   setup_wifi();
   client.setServer(mqtt_server, mqtt_port);
   client.setCallback(callback);
-  create_task2();
+
 
 }
 
-String tosend = "";
-char buf[20];
+
 
 //******************
 //*** L O O P 1  ***
@@ -154,56 +146,20 @@ void loop() {
 		reconnect();
 	}
 
-  if (servo_active){
 
-    int index = 0;
     for(int posDegrees = servo_min_ang; posDegrees <= servo_max_ang; posDegrees+=servo_step) {
+      if(posDegrees>15){
         servo.write(180-posDegrees);
-        delay(servo_speed);
-        tosend = String(distance()) + "," + String(posDegrees);
-        tosend.toCharArray(buf, 20);
-        client.publish("wBdfeDSE8C1zFW6/map", buf);
-        client.loop();
+      }
+      Serial.println(String(posDegrees));
+      delay(servo_speed);
+      tosend = String(distance()) + "," + String(posDegrees);
+      tosend.toCharArray(buf, 20);
+      client.publish("wBdfeDSE8C1zFW6/map", buf);
+      client.loop();
     }
 
-
-
-
-
-
-
-
-
-  }
 }
-
-
-
-//******************
-//*** L O O P 2  ***
-//******************
-void loop2(void *parameter){
-  for(;;){
-    delay(1000);
-
-  }
-  vTaskDelay(10);
-}
-
-//______________________________________________________________
-
-//crea nueva tarea
-void create_task2(){
-  xTaskCreatePinnedToCore(
-    loop2,
-    "Task_2",
-    1000,
-    NULL,
-    1,
-    &Task2,
-    0);
-  }
-
 
   int distance(){
     digitalWrite(pin_trig,HIGH);
@@ -299,6 +255,7 @@ void callback(char* topic, byte* payload, unsigned int length){
 void reconnect() {
 
 	while (!client.connected()) {
+
 		Serial.print("Intentando conexión Mqtt...");
 		// Creamos un cliente ID
 		String clientId = "ALAN_";
