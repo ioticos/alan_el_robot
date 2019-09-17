@@ -48,8 +48,8 @@ const String root_topic = "wBdfeDSE8C1zFW6";
 //SERVO
 #define servo_max_ang   180
 #define servo_min_ang   0
-#define servo_speed     20 
-#define servo_step      5
+#define servo_speed     25 
+#define servo_step      3
 
 
 /*
@@ -145,18 +145,22 @@ void loop() {
 		reconnect();
 	}
 
-
+    delay(300);
     for(int posDegrees = servo_min_ang; posDegrees <= servo_max_ang; posDegrees+=servo_step) {
-      if(posDegrees>15){
+      if (posDegrees>24){
         servo.write(180-posDegrees);
       }
-      Serial.println(String(posDegrees));
+ 
       delay(servo_speed);
       tosend = String(distance()) + "," + String(posDegrees);
       tosend.toCharArray(buf, 20);
       client.publish("wBdfeDSE8C1zFW6/map", buf);
       client.loop();
     }
+     servo.write(155);
+    
+
+    
 
 }
 
