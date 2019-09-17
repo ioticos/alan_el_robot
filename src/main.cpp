@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include <Servo.h> //librería ESP32-Arduino-Servo-Library-master
+#include <Servo.h>
 #include <WiFi.h>
 #include <PubSubClient.h>
 
@@ -80,7 +80,6 @@ PubSubClient client(espClient);
 //MENSAJERIA
 String tosend = "";
 char buf[20];
-
 
 
 //************************
