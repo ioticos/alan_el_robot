@@ -48,8 +48,8 @@ const String root_topic = "wBdfeDSE8C1zFW6";
 //SERVO
 #define servo_max_ang   180
 #define servo_min_ang   0
-#define servo_speed     20
-#define servo_step      3
+#define servo_speed     20 
+#define servo_step      5
 
 
 /*
