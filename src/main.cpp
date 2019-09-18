@@ -3,7 +3,6 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 
-
 //************************
 //**** P I N E S *********
 //************************
@@ -41,18 +40,14 @@ const char* password =  "pingpong";
 //MQTT
 const char *mqtt_server = "ioticos.org";
 const int mqtt_port = 1883;
-const char *mqtt_user = "0AJDqCpuJnr3VwG";
-const char *mqtt_pass = "hIDxo6MJeZeOVAC";
-const String root_topic = "wBdfeDSE8C1zFW6";
+const char *mqtt_user = "acatumqttuser";
+const char *mqtt_pass = "acatupass";
+const String root_topic = "acatutopicoraiz";
 
 //SERVO
 #define servo_max_ang   180
 #define servo_min_ang   0
-<<<<<<< HEAD
-#define servo_speed     20 
-=======
-#define servo_speed     25 
->>>>>>> 3b4cc612c4868e20c6d5f8a88387398f32cab5f4
+#define servo_speed     25
 #define servo_step      3
 
 
@@ -74,8 +69,6 @@ IPAddress secondaryDNS(8, 8, 4, 4); //optional
 
 
 Servo servo;                // se declara instancia de servo
-int pos = 0;                // guardaremos la posición actual del servo
-int dist_map[(servo_max_ang-servo_min_ang)/servo_step];  //creamos array mapa para guardar una distancia por ángulo
 
 //MQTT
 WiFiClient espClient;
@@ -102,6 +95,7 @@ void movement(String side); //side: left,right,straight,back
 
 
 
+
 //******************
 //*** S E T U P  ***
 //******************
@@ -114,9 +108,9 @@ void setup() {
   pinMode(pin_echo,INPUT);
 
   //motor izq
-  pinMode(pin_ena1,OUTPUT);
-  pinMode(pin_n1,OUTPUT);
-  pinMode(pin_n2,OUTPUT);
+  pinMode(pin_ena1,OUTPUT);   // h 
+  pinMode(pin_n1,OUTPUT);     // l
+  pinMode(pin_n2,OUTPUT);     // l
 
   //motor der
   pinMode(pin_ena2,OUTPUT);
@@ -126,15 +120,14 @@ void setup() {
   digitalWrite(pin_ena1,HIGH);
   digitalWrite(pin_ena2,HIGH);
 
-  digitalWrite(pin_echo,LOW);
 
-  servo.attach(pin_servo);  // attaches the servo on pin 13 to the servo object
+  servo.attach(pin_servo); //pin 13
 
-  randomSeed(micros());
+
   setup_wifi();
   client.setServer(mqtt_server, mqtt_port);
   client.setCallback(callback);
-
+  
 
 }
 
@@ -145,27 +138,28 @@ void setup() {
 //******************
 void loop() {
 
+
   if (!client.connected()) {
 		reconnect();
 	}
 
     delay(300);
+
     for(int posDegrees = servo_min_ang; posDegrees <= servo_max_ang; posDegrees+=servo_step) {
+      
       if (posDegrees>24){
         servo.write(180-posDegrees);
       }
- 
+
       delay(servo_speed);
+
+
       tosend = String(distance()) + "," + String(posDegrees);
       tosend.toCharArray(buf, 20);
-      client.publish("wBdfeDSE8C1zFW6/map", buf);
+      client.publish("acatutopicoraiz/map", buf);
       client.loop();
     }
      servo.write(155);
-    
-
-    
-
 }
 
   int distance(){
@@ -181,8 +175,11 @@ void loop() {
 void movement(String side){
 
   if (side == "straight"){
+      //rueda1
       digitalWrite(pin_n1,LOW);
       digitalWrite(pin_n2,HIGH);
+      
+      //rueda2
       digitalWrite(pin_n3,HIGH);
       digitalWrite(pin_n4,LOW);
   }
@@ -215,6 +212,7 @@ void movement(String side){
       digitalWrite(pin_n4,LOW);
   }
 
+  
 }
 
 //*****************************
@@ -246,9 +244,11 @@ void callback(char* topic, byte* payload, unsigned int length){
 	Serial.print("Mensaje recibido desde -> ");
 	Serial.print(topic);
 	Serial.println("");
+
 	for (int i = 0; i < length; i++) {
 		incoming += (char)payload[i];
 	}
+
 	incoming.trim();
 	Serial.println("Mensaje -> " + incoming);
 
@@ -257,6 +257,7 @@ void callback(char* topic, byte* payload, unsigned int length){
 	if(topic_str == root_topic + "/movement"){
     movement(incoming);
   }
+
 }
 
 void reconnect() {
@@ -271,7 +272,7 @@ void reconnect() {
 		if (client.connect(clientId.c_str(),mqtt_user,mqtt_pass)) {
 			Serial.println("Conectado!");
 			// Nos suscribimos
-			if(client.subscribe("wBdfeDSE8C1zFW6/movement")){
+			if(client.subscribe("acatutopicoraiz/movement")){
         Serial.println("Suscripcion ok");
       }else{
         Serial.println("fallo Suscripciión");
