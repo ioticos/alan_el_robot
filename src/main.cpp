@@ -33,8 +33,8 @@
 //************************
 
 //WIFI
-const char* ssid = "IOTICOS";
-const char* password =  "pingpong";
+const char* ssid = "aquitussid";
+const char* password =  "aquituwifipassw";
 
 
 //MQTT
